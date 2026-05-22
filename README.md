@@ -98,8 +98,6 @@ const CONFIG = {
 
 **4. Préparer le Google Sheets**
 
-**4. Préparer le Google Sheets**
-
 Un modèle Google Sheets prêt à l'emploi est disponible :
 
 📊 **[Accéder au modèle LIKOAM](https://docs.google.com/spreadsheets/d/1Pm0DNfa6StI4gH1YAb9OeHLSB06CknNj9q1sQDfFnmQ/edit?usp=sharing)**
@@ -262,8 +260,6 @@ const CONFIG = {
   MAX_TAILLE_MO    : 10
 };
 ```
-
-**4. Prepare the Google Sheets**
 
 **4. Prepare the Google Sheets**
 
