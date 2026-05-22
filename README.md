@@ -133,7 +133,7 @@ Cette version publiée sur GitHub est une version fonctionnelle de base. Les fon
 > Les champs DUA, Sort final et Date d'élimination peuvent être renseignés manuellement dans Google Sheets.
 
 **Roadmap**
-- **v1.1** — Consolidation et corrections (juin 2026)
+- **v1** — Consolidation et corrections (juin 2026)
 - **v2.0** — Version autonome Python / Flask / SQLite, calcul automatique des DUA, déploiement hors ligne sans Google (fin 2026)
 
 📧 Pour la version complète ou un déploiement accompagné : **likoamarchives@gmail.com**
@@ -294,7 +294,7 @@ This version published on GitHub is a functional baseline release. The following
 > DUA, disposition action and disposal date fields can be filled in manually directly in Google Sheets.
 
 **Roadmap**
-- **v1.1** — Consolidation and bug fixes (June 2026)
+- **v1** — Consolidation and bug fixes (June 2026)
 - **v2.0** — Standalone version (Python / Flask / SQLite), automatic retention calculation, offline deployment without Google (end 2026)
 
 📧 For the full version or assisted deployment: **likoamarchives@gmail.com**
