@@ -1,4 +1,4 @@
-# LIKOAM — Système de Gestion d' Archives / Records Management System
+# LIKOAM — Système de Gestion d'Archives / Records Management System
 
 ![Version](https://img.shields.io/badge/version-0.1-beta-bordeaux)
 ![Licence](https://img.shields.io/badge/licence-AGPL%20v3-blue)
@@ -265,7 +265,13 @@ const CONFIG = {
 
 **4. Prepare the Google Sheets**
 
-The project requires a Google Sheets file with the following sheets: `Documents`, `Agents`, `SERVICES`, `Référence DUA`, `BORDEREAUX`. Column structure is documented in the source code.
+**4. Prepare the Google Sheets**
+
+A ready-to-use Google Sheets template is available:
+
+📊 **[Access the LIKOAM template](https://docs.google.com/spreadsheets/d/1Pm0DNfa6StI4gH1YAb9OeHLSB06CknNj9q1sQDfFnmQ/edit?usp=sharing)**
+
+Click **File → Make a copy** to get your own version, then copy the ID from the URL into `Code.gs`.
 
 **5. Deploy**
 - Click **Deploy → New deployment**
