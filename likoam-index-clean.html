@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LIKOAM — Gestion d'Archives</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" media="print" onload="this.media='all'">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --rouge       : #802432;
+  --rouge-fonce : #5e1a24;
+  --or          : #c5a059;
+  --nuit        : #0F172A;
+  --nuit-moyen  : #1e293b;
+  --sidebar-w   : 240px;
+  --gris-fond   : #F8FAFC;
+  --bordure     : #e2e8f0;
+  --texte-sec   : #64748b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--gris-fond);
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  overflow-x: hidden;
+  font-size: 14px;
+  scrollbar-width: none;
+}
+body::-webkit-scrollbar { display: none; }
+::-webkit-scrollbar { display: none; }
+
+/* Skeleton chargement stats */
+.stat-skeleton {
+  color: transparent !important;
+  background: linear-gradient(90deg, #e2e8f0 25%, #f8fafc 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
+  min-width: 50px;
+  display: inline-block;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Sidebar */
+.sidebar {
+  background: var(--nuit);
+  color: white;
+  position: fixed;
+  width: var(--sidebar-w);
+  min-height: 100vh;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+.sidebar-logo {
+  padding: 22px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  justify-content: center;
+}
+.logo-circle {
+  width: 62px; height: 62px;
+  border-radius: 50%;
+  background: var(--nuit-moyen);
+  border: 2.5px solid var(--rouge);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 9.5px; font-weight: 700; letter-spacing: 2px;
+}
+.sidebar hr { border-color: rgba(255,255,255,.08); margin: 6px 14px; }
+
+.nav-link {
+  color: rgba(255,255,255,0.5) !important;
+  margin: 2px 10px; border-radius: 8px;
+  padding: 9px 14px !important; font-size: .85rem;
+  cursor: pointer; transition: all .2s;
+  display: flex; align-items: center; gap: 10px;
+}
+.nav-link i { font-size: 16px; flex-shrink: 0; }
+.nav-link:hover  { background: rgba(255,255,255,0.06) !important; color: rgba(255,255,255,0.85) !important; }
+.nav-link.active { background: var(--rouge) !important; color: white !important; }
+
+.sidebar-footer {
+  padding: 14px 16px; margin-top: auto;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.agent-info { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.agent-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--rouge);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: 600; flex-shrink: 0;
+}
+.agent-nom  { color: white; font-size: 12px; font-weight: 500; }
+.agent-role { color: rgba(255,255,255,0.4); font-size: 10px; margin-top: 1px; }
+.btn-deconnexion {
+  width: 100%; background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.5);
+  padding: 7px 12px; border-radius: 7px;
+  font-size: .78rem; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; transition: all .2s;
+}
+.btn-deconnexion:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.8); }
+
+/* Zone principale */
+.main-content { margin-left: var(--sidebar-w); min-height: 100vh; }
+.header-banner {
+  background: var(--nuit); color: white;
+  padding: 14px 24px; border-bottom: 3px solid var(--or);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-banner h2 { margin: 0; font-size: .95rem; font-weight: 500; letter-spacing: 1.5px; }
+.header-date { color: rgba(255,255,255,0.4); font-size: .78rem; }
+
+.page-section { display: none; padding: 24px; }
+.page-section.active { display: block; }
+.page-title    { font-size: 1.2rem; font-weight: 600; color: var(--rouge); margin-bottom: 4px; }
+.page-subtitle { font-size: .78rem; color: var(--texte-sec); margin-bottom: 20px; }
+
+/* KPI Cards */
+.kpi-card {
+  background: white; border-radius: 10px; padding: 16px;
+  border: 1px solid var(--bordure); position: relative; overflow: hidden;
+  cursor: pointer; transition: transform .2s, box-shadow .2s;
+}
+.kpi-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+.kpi-accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.kpi-icon   { width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+.kpi-icon i { font-size: 18px; }
+.kpi-label  { font-size: 10px; color: var(--texte-sec); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 4px; font-weight: 500; }
+.kpi-value  { font-size: 26px; font-weight: 600; line-height: 1; }
+.kpi-hint   { font-size: 10px; color: #94a3b8; margin-top: 4px; }
+
+/* Activités */
+.section-label   { font-size: .82rem; font-weight: 500; color: #374151; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.section-label i { color: var(--rouge); font-size: 14px; }
+.activity-list   { background: white; border-radius: 10px; border: 1px solid var(--bordure); overflow: hidden; }
+.activity-item   { display: flex; align-items: flex-start; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--bordure); font-size: .8rem; }
+.activity-item:last-child { border-bottom: none; }
+.activity-dot    { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+.activity-text   { flex: 1; color: #374151; line-height: 1.5; }
+.activity-time   { color: #94a3b8; font-size: .72rem; white-space: nowrap; }
+
+/* Cartes & Tableaux */
+.card        { border: 1px solid var(--bordure) !important; border-radius: 10px !important; box-shadow: none !important; }
+.card-header { border-bottom: 1px solid var(--bordure) !important; background: white !important; }
+.table thead { background: var(--nuit); color: white; }
+.table th    { font-size: .75rem; text-transform: uppercase; letter-spacing: .8px; padding: 11px 14px !important; font-weight: 500; }
+.table td    { vertical-align: middle; padding: 10px 14px !important; font-size: .83rem; }
+.table-responsive { border-radius: 10px; overflow: hidden; border: 1px solid var(--bordure); }
+
+/* Boutons */
+.btn       { border-radius: 8px !important; transition: all .2s !important; font-size: .83rem !important; }
+.btn:hover { transform: translateY(-1px); }
+.btn-liko  { background: var(--rouge) !important; color: white !important; border: none !important; }
+.btn-liko:hover { background: var(--rouge-fonce) !important; }
+#btn-valider  { background: #f39c12 !important; color: white; border: none !important; }
+#btn-trier    { background: #3498db !important; color: white; border: none !important; }
+#btn-detruire { background: #e74c3c !important; color: white; border: none !important; }
+
+/* Badges statut */
+.badge-attente { background:#fff3cd; color:#856404; border:1px solid #ffc107; border-radius:6px; padding:3px 10px; font-size:.72rem; font-weight:600; }
+.badge-valide  { background:#d1e7dd; color:#0a3622; border:1px solid #198754; border-radius:6px; padding:3px 10px; font-size:.72rem; font-weight:600; }
+
+/* Zone upload */
+.upload-zone {
+  border: 2px dashed #cbd5e1; border-radius: 10px;
+  padding: 28px; text-align: center; cursor: pointer;
+  transition: all .2s; background: var(--gris-fond);
+}
+.upload-zone:hover { border-color: var(--rouge); background: #fff5f5; }
+.file-chosen {
+  display: none; background: #d1e7dd; border: 1px solid #198754;
+  border-radius: 8px; padding: 8px 14px; margin-top: 8px;
+  font-size: .82rem; color: #0a3622;
+}
+
+/* Formulaires */
+.form-control, .form-select { border: 1px solid var(--bordure) !important; border-radius: 8px !important; font-size: .85rem !important; }
+.form-control:focus, .form-select:focus { border-color: var(--rouge) !important; box-shadow: 0 0 0 3px rgba(128,36,50,.1) !important; }
+.form-label { font-size: .78rem; font-weight: 600; color: #374151; margin-bottom: 4px; }
+
+/* Écran de connexion */
+#loginOverlay {
+  position: fixed; inset: 0; background: var(--nuit);
+  z-index: 99999; display: flex; align-items: center; justify-content: center;
+  transition: opacity .4s;
+}
+.login-card {
+  background: white; border-radius: 16px; padding: 48px 36px;
+  width: 360px; text-align: center;
+  box-shadow: 0 25px 60px rgba(0,0,0,.4);
+}
+.login-logo {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: var(--nuit-moyen); border: 3px solid var(--rouge);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11.5px; font-weight: 700; letter-spacing: 2px;
+  margin: 0 auto 28px;
+}
+#login-progress { display: none; margin-top: 16px; }
+#login-progress-bar-outer { background: #e5e7eb; border-radius: 100px; height: 5px; overflow: hidden; }
+#login-progress-bar { height: 100%; width: 0%; border-radius: 100px; background: linear-gradient(90deg, var(--rouge), var(--or)); transition: width .3s ease; }
+#login-progress-label { font-size: .72rem; color: #6b7280; margin-top: 6px; text-align: center; }
+
+/* Modale confirmation versement */
+#modal-confirmation-versement {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.75); z-index: 99998;
+  align-items: center; justify-content: center;
+}
+#modal-confirmation-versement.open { display: flex; }
+.confirm-versement-box { background: white; border-radius: 14px; width: 460px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.4); }
+.confirm-versement-header { background: var(--nuit); color: white; padding: 16px 20px; display: flex; align-items: center; gap: 10px; }
+.confirm-versement-header i { font-size: 20px; color: var(--or); }
+.confirm-versement-header h4 { margin: 0; font-size: .95rem; font-weight: 600; }
+.confirm-versement-body { padding: 20px; }
+.resume-field { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--bordure); font-size: .85rem; }
+.resume-field:last-child { border-bottom: none; }
+.resume-field-label { color: var(--texte-sec); font-weight: 500; min-width: 100px; flex-shrink: 0; }
+.resume-field-value { color: #1e293b; font-weight: 600; }
+.confirm-versement-footer { padding: 16px 20px; background: var(--gris-fond); display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid var(--bordure); }
+
+/* Modale consultation document */
+#modal-consultation { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 9999; }
+.modal-inner { background: white; margin: 4% auto; width: 82%; height: 88%; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+.modal-header-bar { padding: 14px 20px; background: var(--rouge); color: white; display: flex; justify-content: space-between; align-items: center; }
+.modal-header-bar h3 { margin: 0; font-size: .95rem; font-weight: 500; }
+.modal-body-scroll { flex-grow: 1; padding: 20px; overflow-y: auto; background: #f4f4f4; }
+.modal-footer-bar { padding: 14px 20px; background: #f8fafc; display: flex; justify-content: center; gap: 12px; border-top: 1px solid var(--bordure); }
+
+/* Modale confirmation générale */
+#confirmOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 99999; align-items: center; justify-content: center; }
+#confirmOverlay.open { display: flex; }
+.confirm-box { background: white; border-radius: 14px; padding: 32px 36px; width: 400px; text-align: center; border-top: 5px solid var(--rouge); }
+
+/* Toast notification */
+#liveToast {
+  display: none; position: fixed; top: 16px; left: 50%;
+  transform: translateX(-50%); z-index: 999999;
+  border-radius: 10px; padding: 12px 22px; color: white;
+  font-weight: 500; font-size: .85rem; min-width: 280px;
+  text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,.2);
+}
+
+/* Impression bordereaux */
+@media print {
+  body * { visibility: hidden !important; }
+  #zone-impression, #zone-impression * { visibility: visible !important; }
+  #zone-impression { position:fixed !important; top:0; left:0; width:100%; background:white; z-index:99999; }
+  .no-print { display:none !important; }
+}
+#zone-impression { display:none; font-family:'Times New Roman',serif; font-size:11pt; color:#000; max-width:800px; margin:0 auto; padding:20mm 15mm; }
+.bord-table { width:100%; border-collapse:collapse; margin-top:8px; font-size:9pt; }
+.bord-table th { background:#1e293b; color:white; padding:5px 8px; text-align:left; font-size:8pt; }
+.bord-table td { border:1px solid #999; padding:5px 8px; vertical-align:top; }
+.bord-table tr:nth-child(even) td { background:#f9f9f9; }
+
+/* Responsive mobile */
+#mobile-toggle { display: none; position: fixed; top: 12px; left: 12px; z-index: 2000; background: var(--rouge); color: white; border: none; border-radius: 8px; padding: 8px 12px; }
+@media (max-width: 768px) {
+  .sidebar { margin-left: calc(-1 * var(--sidebar-w)); transition: margin .3s; }
+  .sidebar.open { margin-left: 0; }
+  .main-content { margin-left: 0 !important; width: 100% !important; }
+  #mobile-toggle { display: flex !important; }
+  .page-section { padding: 12px !important; }
+  .table-responsive { box-shadow: none; border-radius: 0; background: transparent; }
+  table thead { display: none !important; }
+  table tbody tr { display:block !important; background:white; border-radius:10px; margin-bottom:10px; padding:12px 14px !important; border:1px solid var(--bordure) !important; }
+  table tbody td { display:flex !important; justify-content:space-between; align-items:flex-start; padding:4px 0 !important; border:none !important; font-size:.82rem; word-break:break-word; }
+  table tbody td::before { content:attr(data-label); font-weight:600; color:var(--texte-sec); font-size:.72rem; text-transform:uppercase; letter-spacing:.5px; flex-shrink:0; margin-right:10px; min-width:100px; padding-top:2px; }
+  table tbody td[data-label=""]::before, table tbody td.td-actions::before { display: none; }
+  table tbody td.td-actions { display:flex !important; flex-wrap:wrap; gap:6px; justify-content:flex-start !important; margin-top:8px; padding-top:8px !important; border-top:1px solid #f1f5f9 !important; }
+}
+@media (min-width: 769px) {
+  .cards-mobile  { display: none !important; }
+  .table-desktop { display: block !important; }
+}
+</style>
+</head>
+<body>
+
+<button id="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">
+  <i class="bi bi-list"></i>
+</button>
+
+<!-- Écran de connexion — seul élément visible au chargement -->
+<div id="loginOverlay">
+  <div class="login-card">
+    <div class="login-logo">LIKOAM</div>
+    <p class="text-muted small mb-4" style="margin-top:-4px">Identification sécurisée</p>
+    <input type="password" id="inputCode" class="form-control mb-3 text-center"
+           placeholder="Code Agent" style="font-size:1rem"
+           onkeydown="if(event.key==='Enter')seConnecter()">
+    <div id="loginError" class="alert alert-danger py-1 small mb-3" style="display:none"></div>
+    <button id="btnLogin" onclick="seConnecter()" class="btn btn-liko w-100 fw-bold py-2">Se connecter</button>
+    <div id="login-progress">
+      <div id="login-progress-bar-outer"><div id="login-progress-bar"></div></div>
+      <div id="login-progress-label">Connexion en cours...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Conteneur principal — vide jusqu'à la connexion réussie -->
+<div id="app" style="display:none">
+
+  <nav class="sidebar shadow">
+    <div class="sidebar-logo">
+      <div class="logo-circle">LIKOAM</div>
+    </div>
+    <hr>
+    <div class="nav flex-column">
+      <a id="menu-dashboard" class="nav-link" style="display:none" onclick="showPage('page-dashboard',this)">
+        <i class="bi bi-speedometer2"></i>Tableau de bord
+      </a>
+      <a class="nav-link" onclick="showPage('page-versement',this)">
+        <i class="bi bi-cloud-arrow-up"></i>Versement
+      </a>
+      <a class="nav-link" onclick="showPage('page-recherche',this)">
+        <i class="bi bi-search"></i>Recherche
+      </a>
+      <a id="menu-archives" class="nav-link" style="display:none" onclick="showPage('page-archives',this);chargerHistorique()">
+        <i class="bi bi-folder2"></i>Archives
+      </a>
+      <a id="menu-admin" class="nav-link" style="display:none" onclick="showPage('page-administration',this)">
+        <i class="bi bi-shield-lock-fill"></i>Administration
+      </a>
+      <a id="menu-bordereaux" class="nav-link" style="display:none" onclick="showPage('page-bordereaux',this)">
+        <i class="bi bi-file-earmark-text"></i>Bordereaux
+      </a>
+      <a class="nav-link" onclick="showPage('page-aide',this)">
+        <i class="bi bi-question-circle"></i>Aide
+      </a>
+    </div>
+    <hr>
+    <div class="sidebar-footer">
+      <div class="agent-info">
+        <div class="agent-avatar" id="agent-avatar-initiales">?</div>
+        <div>
+          <div class="agent-nom"  id="agent-nom-sidebar">---</div>
+          <div class="agent-role" id="agent-role-sidebar">---</div>
+        </div>
+      </div>
+      <button onclick="seDeconnecter()" class="btn-deconnexion">
+        <i class="bi bi-box-arrow-left"></i>Déconnexion
+      </button>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div class="header-banner">
+      <h2>SYSTÈME DE GESTION D'ARCHIVES</h2>
+      <span class="header-date" id="header-date"></span>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="page-dashboard" class="page-section">
+      <div class="page-title">Tableau de bord</div>
+      <div class="page-subtitle">Vue d'ensemble des documents</div>
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+          <div class="kpi-card" onclick="afficherDocs('valider')">
+            <div class="kpi-accent" style="background:var(--nuit-moyen)"></div>
+            <div class="kpi-icon" style="background:#f1f5f9"><i class="bi bi-files" style="color:var(--nuit-moyen)"></i></div>
+            <div class="kpi-label">Total</div>
+            <div class="kpi-value stat-skeleton" id="s-total">…</div>
+            <div class="kpi-hint">documents enregistrés</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="kpi-card" onclick="afficherDocs('valider')">
+            <div class="kpi-accent" style="background:#f39c12"></div>
+            <div class="kpi-icon" style="background:#fff8ee"><i class="bi bi-clock-history" style="color:#f39c12"></i></div>
+            <div class="kpi-label">À valider</div>
+            <div class="kpi-value stat-skeleton" id="s-valider">…</div>
+            <div class="kpi-hint">en attente de validation</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="kpi-card" onclick="afficherDocs('perimes')">
+            <div class="kpi-accent" style="background:#e74c3c"></div>
+            <div class="kpi-icon" style="background:#fef2f2"><i class="bi bi-exclamation-triangle" style="color:#e74c3c"></i></div>
+            <div class="kpi-label">Périmés</div>
+            <div class="kpi-value stat-skeleton" id="s-perimes">…</div>
+            <div class="kpi-hint">DUA dépassée</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="kpi-card" onclick="afficherDocs('alertes')">
+            <div class="kpi-accent" style="background:#00bcd4"></div>
+            <div class="kpi-icon" style="background:#e0f7fa"><i class="bi bi-bell" style="color:#00bcd4"></i></div>
+            <div class="kpi-label">Alertes</div>
+            <div class="kpi-value stat-skeleton" id="s-alertes">…</div>
+            <div class="kpi-hint">échéances proches</div>
+          </div>
+        </div>
+      </div>
+      <div id="zone-liste-dashboard" class="card d-none mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center py-2" style="background:var(--nuit) !important">
+          <span id="titre-liste-dashboard" class="small fw-bold text-white"></span>
+          <button class="btn-close btn-close-white btn-sm" onclick="document.getElementById('zone-liste-dashboard').classList.add('d-none')"></button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <tbody id="corps-liste-dashboard"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="section-label"><i class="bi bi-activity"></i>Activités récentes</div>
+      <div class="activity-list" id="activites-recentes">
+        <div class="activity-item">
+          <div class="activity-dot" style="background:#94a3b8"></div>
+          <div class="activity-text" style="color:#94a3b8;font-style:italic">Les activités s'afficheront après votre première action.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Versement -->
+    <div id="page-versement" class="page-section">
+      <div class="alert border-0 mb-4" style="background:white;border-left:4px solid var(--rouge) !important;border-radius:10px;padding:14px 18px">
+        <div class="fw-bold" style="font-size:.9rem">Bonjour, <span id="nom-agent-versement" style="color:var(--rouge)">---</span></div>
+        <small class="text-muted">Remplissez le formulaire, téléchargez votre fichier, puis cliquez sur "Prévisualiser et verser".</small>
+      </div>
+      <div class="card">
+        <div class="card-header py-3">
+          <span class="fw-bold" style="font-size:.88rem"><i class="bi bi-cloud-arrow-up me-2" style="color:var(--rouge)"></i>Nouveau versement</span>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Agent versant</label>
+              <input type="text" id="v-agent" class="form-control" readonly>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Service émetteur</label>
+              <select id="v-service" class="form-select"></select>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Titre / Objet <span class="text-danger">*</span></label>
+              <input type="text" id="v-titre" class="form-control" placeholder="Ex : Facture CIE Janvier 2024">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Catégorie <span class="text-danger">*</span></label>
+              <select id="v-categorie" class="form-select">
+                <option value="">-- Choisir une catégorie --</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Fichier <span class="text-danger">*</span> <small class="text-muted fw-normal">(max 10 Mo)</small></label>
+              <div class="upload-zone" onclick="document.getElementById('v-file').click()">
+                <i class="bi bi-file-earmark-arrow-up" style="font-size:2.2rem;color:#94a3b8;display:block;margin-bottom:8px"></i>
+                <p class="mb-1 fw-bold" style="font-size:.88rem">Cliquer pour sélectionner un fichier</p>
+                <small class="text-muted">PDF, JPG, PNG, DOCX — Tous formats</small>
+              </div>
+              <input type="file" id="v-file" style="display:none" onchange="onFileSelect(event)">
+              <div class="file-chosen" id="file-chosen">
+                <i class="bi bi-check-circle me-2"></i>
+                <span id="file-name"></span>
+                <button onclick="changerFichier()" class="btn btn-sm btn-outline-secondary ms-2" style="padding:1px 8px;font-size:.75rem">Changer</button>
+              </div>
+            </div>
+            <div class="col-12">
+              <div id="prog-zone" style="display:none" class="mb-2">
+                <div class="progress mb-1" style="height:6px;border-radius:100px">
+                  <div id="prog-bar" class="progress-bar progress-bar-striped progress-bar-animated" style="width:0%;background:var(--rouge)"></div>
+                </div>
+                <small class="text-muted" id="prog-label">Traitement en cours...</small>
+              </div>
+              <button type="button" id="btnVerser" onclick="ouvrirConfirmationVersement()" class="btn btn-liko w-100 py-2 fw-bold">
+                <i class="bi bi-eye me-2"></i>Prévisualiser et verser
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="zone-bordereau-versement" style="display:none" class="mt-4">
+        <div class="card" style="border-left:4px solid var(--or) !important">
+          <div class="card-header d-flex justify-content-between align-items-center py-2">
+            <span class="fw-bold" style="font-size:.85rem"><i class="bi bi-file-earmark-check me-2" style="color:var(--or)"></i>Bordereau de versement généré</span>
+            <div class="d-flex gap-2">
+              <button onclick="telechargerBordereauVersement()" class="btn btn-warning btn-sm fw-bold"><i class="bi bi-download me-1"></i>Télécharger PDF</button>
+              <button onclick="document.getElementById('zone-bordereau-versement').style.display='none'" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x"></i></button>
+            </div>
+          </div>
+          <div class="card-body p-0" id="apercu-bordereau-versement" style="font-size:.82rem;overflow:auto;max-height:500px;padding:20px !important"></div>
+        </div>
+      </div>
+      <div class="mt-4">
+        <button class="btn btn-outline-secondary btn-sm w-100 fw-bold" onclick="basculerHistoriqueVersements()" id="btn-toggle-historique">
+          <i class="bi bi-clock-history me-2"></i>Voir l'historique de mes versements
+        </button>
+        <div id="historique-versements" style="display:none" class="mt-3">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center py-2">
+              <span class="fw-bold" style="font-size:.83rem"><i class="bi bi-journal-text me-2"></i>Mes versements</span>
+              <button onclick="chargerHistoriqueAgent()" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-clockwise"></i></button>
+            </div>
+            <div class="card-body p-0">
+              <div id="historique-agent-body" class="p-3 text-center text-muted small">
+                <i class="bi bi-hourglass-split me-2"></i>Chargement...
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recherche -->
+    <div id="page-recherche" class="page-section">
+      <div class="page-title">Recherche documentaire</div>
+      <div class="page-subtitle">Retrouvez un document par titre, agent, service ou statut</div>
+      <div class="card mb-3">
+        <div class="card-body py-3">
+          <div class="row g-2">
+            <div class="col-md-2"><label class="form-label">N° / Agent</label><input type="text" id="qNum" class="form-control" placeholder="Rechercher..."></div>
+            <div class="col-md-3"><label class="form-label">Titre / Objet</label><input type="text" id="qTitre" class="form-control" placeholder="Mot-clé..."></div>
+            <div class="col-md-2"><label class="form-label">Date</label><input type="date" id="qDate" class="form-control"></div>
+            <div class="col-md-2"><label class="form-label">Service</label><select id="qService" class="form-select"><option value="">Tous</option></select></div>
+            <div class="col-md-3"><label class="form-label">Catégorie</label><select id="qCat" class="form-select"><option value="">Toutes</option></select></div>
+            <div class="col-md-2"><label class="form-label">Statut</label><select id="qStat" class="form-select"><option value="">Tous</option><option>En attente</option><option>Validé</option></select></div>
+            <div class="col-md-8 d-flex align-items-end gap-2">
+              <button onclick="lancerRecherche()" class="btn btn-liko fw-bold flex-grow-1"><i class="bi bi-search me-2"></i>Rechercher</button>
+              <button onclick="toutEffacer()" class="btn btn-outline-secondary"><i class="bi bi-x-circle"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead><tr><th>N°</th><th>Titre</th><th>Agent / Service</th><th>Catégorie</th><th>Statut</th><th class="text-end">Action</th></tr></thead>
+            <tbody id="resultTableBody"><tr><td colspan="6" class="text-center text-muted py-4"></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Archives -->
+    <div id="page-archives" class="page-section">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <div>
+          <div class="page-title">Coffre-fort des archives</div>
+          <div class="page-subtitle">Documents validés</div>
+        </div>
+        <div class="d-flex gap-2">
+          <button onclick="chargerHistorique()" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-clockwise me-1"></i>Actualiser</button>
+          <button onclick="viderTableau('archiveTableBody',6,'Cliquez sur Actualiser pour charger les archives')" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-circle me-1"></i>Effacer</button>
+        </div>
+      </div>
+      <div class="card mb-3">
+        <div class="card-body py-2">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-3"><label class="form-label">Sort final</label><select id="aSort" class="form-select form-select-sm"><option value="">Tous</option><option value="D">D — À détruire</option><option value="T">T — À trier</option><option value="C">C — Conservation</option></select></div>
+            <div class="col-md-3"><label class="form-label">Catégorie</label><select id="aCat" class="form-select form-select-sm"><option value="">Toutes</option></select></div>
+            <div class="col-md-2"><label class="form-label">Échéance avant le</label><input type="date" id="aEcheance" class="form-control form-control-sm"></div>
+            <div class="col-md-2"><label class="form-label">Service</label><select id="aService" class="form-select form-select-sm"><option value="">Tous</option></select></div>
+            <div class="col-md-2 d-flex gap-1">
+              <button onclick="filtrerArchives()" class="btn btn-liko btn-sm flex-grow-1"><i class="bi bi-funnel me-1"></i>Filtrer</button>
+              <button onclick="reinitFiltresArchives()" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x"></i></button>
+            </div>
+          </div>
+          <div id="info-archives" class="small text-muted mt-2" style="display:none"></div>
+        </div>
+      </div>
+      <div class="card table-desktop">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead><tr><th>N°</th><th>Titre / Date validation</th><th>Agent / Service</th><th>Catégorie</th><th>Sort / Échéance</th><th class="text-end">Action</th></tr></thead>
+            <tbody id="archiveTableBody"><tr><td colspan="6" class="text-center text-muted py-4">Chargement...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="archiveCards" class="cards-mobile"></div>
+    </div>
+
+    <!-- Administration -->
+    <div id="page-administration" class="page-section">
+      <div class="page-title">Administration</div>
+      <div class="page-subtitle">Gérez les agents, les services et les catégories</div>
+      <div class="d-flex justify-content-center mb-4">
+        <div class="btn-group">
+          <input type="radio" class="btn-check" name="adminMode" id="btn-config" checked onchange="basculerAdmin('config')">
+          <label class="btn btn-outline-secondary fw-bold" for="btn-config"><i class="bi bi-gear me-2"></i>Configuration</label>
+          <input type="radio" class="btn-check" name="adminMode" id="btn-agents" onchange="basculerAdmin('agents')">
+          <label class="btn btn-outline-secondary fw-bold" for="btn-agents"><i class="bi bi-people me-2"></i>Agents</label>
+        </div>
+      </div>
+      <div id="section-config">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="card">
+              <div class="card-header py-2"><span class="fw-bold" style="font-size:.82rem"><i class="bi bi-building me-2" style="color:var(--rouge)"></i>Services</span></div>
+              <div class="card-body">
+                <div class="input-group input-group-sm">
+                  <input type="text" id="newService" class="form-control" placeholder="Nom du service...">
+                  <button class="btn btn-liko" onclick="ajouterElement('Service')"><i class="bi bi-plus-lg"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-8">
+            <div class="card">
+              <div class="card-header py-2"><span class="fw-bold" style="font-size:.82rem"><i class="bi bi-tags me-2" style="color:var(--rouge)"></i>Catégories & DUA</span></div>
+              <div class="card-body">
+                <div class="row g-1">
+                  <div class="col-5"><input type="text" id="newCatNom" class="form-control form-control-sm" placeholder="Nom catégorie"></div>
+                  <div class="col-2"><input type="number" id="newCatDua" class="form-control form-control-sm" placeholder="DUA"></div>
+                  <div class="col-3"><select id="newCatSort" class="form-select form-select-sm"><option value="D">D — Destruction</option><option value="T">T — Tri</option><option value="C">C — Conservation</option></select></div>
+                  <div class="col-2"><button class="btn btn-liko btn-sm w-100" onclick="validerNouvelleCategorie()"><i class="bi bi-plus-lg"></i></button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="section-agents" style="display:none">
+        <div class="card mb-3">
+          <div class="card-header py-2"><span class="fw-bold" style="font-size:.82rem"><i class="bi bi-person-plus me-2" style="color:var(--rouge)"></i>Créer un profil</span></div>
+          <div class="card-body">
+            <div class="row g-2">
+              <div class="col-md-3"><input type="text" id="agentNom" class="form-control form-control-sm" placeholder="Nom & Prénoms"></div>
+              <div class="col-md-3"><input type="email" id="agentEmail" class="form-control form-control-sm" placeholder="Email"></div>
+              <div class="col-md-2"><select id="agentService" class="form-select form-select-sm"><option value="">Service...</option></select></div>
+              <div class="col-md-2"><select id="agentRole" class="form-select form-select-sm"><option value="user">User</option><option value="Admin">Admin</option></select></div>
+              <div class="col-md-2"><button class="btn btn-liko btn-sm w-100" onclick="enregistrerNouvelAgent()">Enregistrer</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center py-2">
+            <span class="fw-bold" style="font-size:.82rem"><i class="bi bi-people me-2" style="color:var(--rouge)"></i>Répertoire des accès</span>
+            <div class="d-flex gap-2">
+              <input type="text" id="rechercheAgent" class="form-control form-control-sm" placeholder="Rechercher..." style="width:170px" onkeyup="filtrerAgents()">
+              <button class="btn btn-sm btn-outline-secondary" onclick="chargerListeAgents()"><i class="bi bi-arrow-clockwise"></i></button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('tableAgents').innerHTML=''"><i class="bi bi-x-circle"></i></button>
+            </div>
+          </div>
+          <div class="table-responsive table-desktop" style="max-height:400px;overflow-y:auto">
+            <table class="table table-hover table-sm align-middle mb-0">
+              <thead class="sticky-top"><tr><th>Nom</th><th>Code</th><th>Email</th><th>Service</th><th>Rôle</th><th>Statut</th><th>Actions</th></tr></thead>
+              <tbody id="tableAgents"></tbody>
+            </table>
+          </div>
+          <div id="agentCards" class="cards-mobile p-2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bordereaux -->
+    <div id="page-bordereaux" class="page-section">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <div>
+          <div class="page-title">Registre des bordereaux</div>
+          <div class="page-subtitle">Versements et éliminations enregistrés</div>
+        </div>
+        <div class="d-flex gap-2">
+          <button onclick="chargerBordereaux()" class="btn btn-liko btn-sm"><i class="bi bi-arrow-clockwise me-1"></i>Actualiser</button>
+          <button onclick="effacerBordereaux()" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-circle me-1"></i>Effacer</button>
+        </div>
+      </div>
+      <div class="card mb-3">
+        <div class="card-body py-2">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-3"><label class="form-label">Type</label><select id="bord-filtre-type" class="form-select form-select-sm"><option value="">Tous</option><option value="versement">Versement</option><option value="elimination">Élimination</option></select></div>
+            <div class="col-md-3"><label class="form-label">Service</label><select id="bord-filtre-service" class="form-select form-select-sm"><option value="">Tous</option></select></div>
+            <div class="col-md-3"><label class="form-label">Date (à partir du)</label><input type="date" id="bord-filtre-date" class="form-control form-control-sm"></div>
+            <div class="col-md-3 d-flex gap-1">
+              <button onclick="filtrerBordereaux()" class="btn btn-liko btn-sm flex-grow-1"><i class="bi bi-search me-1"></i>Rechercher</button>
+              <button onclick="reinitBordereaux()" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center py-2">
+          <span class="fw-bold" style="font-size:.83rem"><i class="bi bi-journal-text me-2" style="color:var(--rouge)"></i><span id="bord-count-label">Cliquez sur Actualiser pour charger les bordereaux</span></span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>N° Bordereau</th><th>Type</th><th>Agent</th><th>Service</th><th>Titre</th><th>Date</th><th class="text-end">Action</th></tr></thead>
+            <tbody id="bord-table-body">
+              <tr><td colspan="7" class="text-center text-muted py-5"><i class="bi bi-file-earmark-text" style="font-size:2rem;display:block;opacity:.25;margin-bottom:10px"></i>Cliquez sur <strong>Actualiser</strong> pour afficher les bordereaux</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Aide -->
+    <div id="page-aide" class="page-section">
+      <div class="page-title">Aide & Documentation</div>
+      <div class="page-subtitle">Guides et ressources pour utiliser LIKOAM</div>
+      <div class="card">
+        <div class="card-header py-2">
+          <span class="fw-bold" style="font-size:.85rem"><i class="bi bi-book me-2" style="color:var(--rouge)"></i>Guide d'utilisation</span>
+        </div>
+        <div class="card-body">
+          <a href="#" target="_blank" class="btn btn-liko">
+            <i class="bi bi-file-earmark-pdf me-2"></i>Ouvrir le guide
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- fin .main-content -->
+</div><!-- fin #app -->
+
+<!-- Modale confirmation versement -->
+<div id="modal-confirmation-versement">
+  <div class="confirm-versement-box">
+    <div class="confirm-versement-header">
+      <i class="bi bi-eye"></i>
+      <h4>Vérifiez avant d'envoyer</h4>
+    </div>
+    <div class="confirm-versement-body">
+      <p class="text-muted small mb-3">Confirmez les informations ci-dessous. Cliquez sur <strong>Modifier</strong> pour corriger.</p>
+      <div class="resume-field"><span class="resume-field-label"><i class="bi bi-person me-2 text-muted"></i>Agent</span><span class="resume-field-value" id="resume-agent">---</span></div>
+      <div class="resume-field"><span class="resume-field-label"><i class="bi bi-building me-2 text-muted"></i>Service</span><span class="resume-field-value" id="resume-service">---</span></div>
+      <div class="resume-field"><span class="resume-field-label"><i class="bi bi-card-text me-2 text-muted"></i>Titre</span><span class="resume-field-value" id="resume-titre">---</span></div>
+      <div class="resume-field"><span class="resume-field-label"><i class="bi bi-tag me-2 text-muted"></i>Catégorie</span><span class="resume-field-value" id="resume-categorie">---</span></div>
+      <div class="resume-field"><span class="resume-field-label"><i class="bi bi-paperclip me-2 text-muted"></i>Fichier</span><span class="resume-field-value" id="resume-fichier" style="word-break:break-all">---</span></div>
+    </div>
+    <div class="confirm-versement-footer">
+      <button onclick="fermerConfirmationVersement()" class="btn btn-outline-secondary"><i class="bi bi-pencil me-2"></i>Modifier</button>
+      <button onclick="confirmerEtVerser()" class="btn btn-liko fw-bold"><i class="bi bi-cloud-arrow-up me-2"></i>Confirmer le versement</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale consultation document -->
+<div id="modal-consultation">
+  <div class="modal-inner">
+    <div class="modal-header-bar">
+      <h3 id="modal-titre">Consultation du Document</h3>
+      <button onclick="fermerConsultation()" style="background:rgba(255,255,255,.2);border:none;border-radius:6px;padding:4px 12px;font-weight:bold;cursor:pointer;color:white">✕ Fermer</button>
+    </div>
+    <div class="modal-body-scroll">
+      <div id="modal-doc-details" class="mb-3 p-3 bg-white rounded" style="font-size:.85rem;border:1px solid var(--bordure)"></div>
+      <div id="loader-document" style="text-align:center;padding:30px"></div>
+    </div>
+    <div class="modal-footer-bar">
+      <button id="btn-valider"  onclick="actionDoc('valider')"  class="btn" style="display:none">✅ Valider</button>
+      <button id="btn-trier"    onclick="actionDoc('trier')"    class="btn" style="display:none"><i class="bi bi-folder-symlink me-1"></i>Trier</button>
+      <button id="btn-detruire" onclick="actionDoc('detruire')" class="btn" style="display:none"><i class="bi bi-trash me-1"></i>Détruire</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale confirmation générale -->
+<div id="confirmOverlay">
+  <div class="confirm-box">
+    <div style="font-size:2rem;margin-bottom:14px">🔐</div>
+    <p id="confirmMessage" style="color:#374151;margin-bottom:22px;font-size:.9rem;line-height:1.6"></p>
+    <div class="d-flex gap-2 justify-content-center">
+      <button id="confirmYes" class="btn btn-liko fw-bold px-4">Confirmer</button>
+      <button onclick="document.getElementById('confirmOverlay').classList.remove('open')" class="btn btn-outline-secondary">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="liveToast"></div>
+
+<script>
+'use strict';
+
+// État global
+let agentConnecte     = null;
+let dashboardData     = null;
+let derniersResultats = [];
+let donneesArchives   = [];
+let tousLesBordereaux = [];
+let fichierEnAttente  = null;
+let docActuel         = null;
+let dernierBordereau  = null;
+let _versementEnCours = false; // verrou anti-double-clic
+
+// Date dans le header
+(function() {
+  const el = document.getElementById('header-date');
+  if (el) el.textContent = new Date().toLocaleDateString('fr-FR', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+})();
+
+// Échapper les caractères HTML pour éviter les injections XSS
+function esc(str) {
+  return String(str || '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+// Connexion
+function seConnecter() {
+  const code  = document.getElementById('inputCode').value.trim();
+  const btn   = document.getElementById('btnLogin');
+  const error = document.getElementById('loginError');
+  if (!code) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Connexion...';
+  error.style.display = 'none';
+
+  const prog  = document.getElementById('login-progress');
+  const bar   = document.getElementById('login-progress-bar');
+  const label = document.getElementById('login-progress-label');
+  prog.style.display = 'block';
+
+  let pct = 0;
+  const msgs  = ['Vérification du code...', 'Chargement des données...', 'Préparation...'];
+  const timer = setInterval(() => {
+    if (pct < 70) { pct += (pct < 30 ? 8 : pct < 55 ? 4 : 1); bar.style.width = pct + '%'; label.textContent = msgs[pct < 30 ? 0 : pct < 60 ? 1 : 2]; }
+  }, 200);
+
+  // Timeout 35 secondes — Apps Script peut être lent au cold start
+  const timeout = setTimeout(() => {
+    clearInterval(timer);
+    prog.style.display = 'none';
+    error.textContent = 'Le serveur met trop de temps à répondre. Veuillez réessayer.';
+    error.style.display = 'block';
+    btn.disabled = false;
+    btn.innerHTML = 'Se connecter';
+  }, 35000);
+
+  google.script.run
+    .withSuccessHandler(res => {
+      clearTimeout(timeout);
+      clearInterval(timer);
+      if (res.success) {
+        bar.style.width = '100%'; label.textContent = 'Bienvenue !';
+        agentConnecte = res;
+        if (res.stats)  { dashboardData = res.stats; retirerSkeleton(); majStats(res.stats); }
+        if (res.listes) appliquerListes(res.listes);
+        setTimeout(() => ouvrirSession(res), 400);
+      } else {
+        prog.style.display = 'none';
+        error.textContent = res.message;
+        error.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = 'Se connecter';
+      }
+    })
+    .withFailureHandler(err => {
+      clearTimeout(timeout);
+      clearInterval(timer);
+      if (!window._loginRetried) {
+        window._loginRetried = true;
+        label.textContent = 'Reconnexion...';
+        setTimeout(() => seConnecter(), 1500);
+      } else {
+        window._loginRetried = false;
+        prog.style.display = 'none';
+        error.textContent = 'Erreur de connexion. Veuillez réessayer.';
+        error.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = 'Se connecter';
+      }
+    })
+    .getInitData(code);
+}
+
+function retirerSkeleton() {
+  ['s-total','s-valider','s-perimes','s-alertes'].forEach(id => document.getElementById(id).classList.remove('stat-skeleton'));
+}
+
+function majStats(s) {
+  document.getElementById('s-total').textContent   = s.total    || 0;
+  document.getElementById('s-valider').textContent = s.aValider || 0;
+  document.getElementById('s-perimes').textContent = s.perimes  || 0;
+  document.getElementById('s-alertes').textContent = s.alertes  || 0;
+}
+
+// Ouvrir la session : injecter l'interface APRÈS connexion réussie
+function ouvrirSession(res) {
+  const isAdmin = (res.role || '').toLowerCase() === 'admin';
+
+  ['menu-dashboard','menu-archives','menu-admin','menu-bordereaux'].forEach(id => {
+    document.getElementById(id).style.display = isAdmin ? 'block' : 'none';
+  });
+
+  const initiales = res.nom ? res.nom.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase() : '?';
+  document.getElementById('agent-avatar-initiales').textContent = initiales;
+  document.getElementById('agent-nom-sidebar').textContent  = res.nom;
+  document.getElementById('agent-role-sidebar').textContent = isAdmin ? 'Administrateur' : 'Agent';
+  document.getElementById('nom-agent-versement').textContent = res.nom;
+  document.getElementById('v-agent').value = res.nom;
+
+  if (!res.listes) remplirListes();
+  if (!res.stats && isAdmin) loadStats();
+
+  if (isAdmin) {
+    google.script.run
+      .withSuccessHandler(activites => _afficherActivitesServeur(activites))
+      .withFailureHandler(() => {})
+      .getDernieresActivites();
+  }
+
+  showPage(isAdmin ? 'page-dashboard' : 'page-versement',
+           isAdmin ? document.getElementById('menu-dashboard') : document.querySelector('a[onclick*="page-versement"]'));
+
+  // Afficher l'interface, masquer l'overlay
+  document.getElementById('app').style.display = 'block';
+  const overlay = document.getElementById('loginOverlay');
+  overlay.style.opacity = '0';
+  setTimeout(() => { overlay.style.display = 'none'; }, 400);
+}
+
+// Déconnexion : vider le DOM et réafficher l'overlay
+function seDeconnecter() {
+  agentConnecte = null; dashboardData = null;
+  derniersResultats = []; donneesArchives = []; tousLesBordereaux = [];
+  fichierEnAttente = null; _versementEnCours = false;
+
+  // Cacher l'interface complète
+  document.getElementById('app').style.display = 'none';
+
+  // Remettre les stats en skeleton
+  ['s-total','s-valider','s-perimes','s-alertes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = '…'; el.classList.add('stat-skeleton'); }
+  });
+
+  // Réinitialiser le formulaire de connexion
+  document.getElementById('inputCode').value = '';
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('login-progress').style.display = 'none';
+  document.getElementById('login-progress-bar').style.width = '0%';
+  document.getElementById('btnLogin').disabled = false;
+  document.getElementById('btnLogin').innerHTML = 'Se connecter';
+
+  const overlay = document.getElementById('loginOverlay');
+  overlay.style.display = 'flex'; overlay.style.opacity = '0';
+  setTimeout(() => { overlay.style.opacity = '1'; }, 50);
+}
+
+// Listes dynamiques
+function remplirListes() {
+  google.script.run.withSuccessHandler(res => appliquerListes(res)).withFailureHandler(() => {}).getListesStats();
+}
+
+function appliquerListes(res) {
+  const optSvc = res.services.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+  const optCat = res.categories.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  const sel = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  sel('v-service',    optSvc);
+  sel('v-categorie',  '<option value="">-- Choisir une catégorie --</option>' + optCat);
+  sel('qService',     '<option value="">Tous services</option>' + optSvc);
+  sel('qCat',         '<option value="">Toutes catégories</option>' + optCat);
+  sel('agentService', '<option value="">-- Choisir --</option>' + optSvc);
+  if (agentConnecte) { const vSvc = document.getElementById('v-service'); if (vSvc) vSvc.value = agentConnecte.service; }
+}
+
+// Dashboard
+function loadStats() {
+  google.script.run.withSuccessHandler(s => { dashboardData = s; retirerSkeleton(); majStats(s); }).getDashboardStats();
+}
+
+function afficherDocs(type) {
+  if (!dashboardData) return;
+  const map = {
+    valider : { docs: dashboardData.docsAValider || [], titre: 'Documents à valider' },
+    perimes : { docs: dashboardData.docsPerimes  || [], titre: 'Documents périmés' },
+    alertes : { docs: dashboardData.docsAlertes  || [], titre: 'Alertes échéance' }
+  };
+  const { docs, titre } = map[type];
+  const zone = document.getElementById('zone-liste-dashboard');
+  if (!docs.length) { notifier('Aucun document dans cette catégorie.', 'info'); zone.classList.add('d-none'); return; }
+  document.getElementById('titre-liste-dashboard').textContent = titre;
+  document.getElementById('corps-liste-dashboard').innerHTML = docs.map(d =>
+    `<tr>
+      <td class="fw-bold p-2" style="font-size:.82rem">${esc(d.numero)}</td>
+      <td class="text-end p-2"><button class="btn btn-sm btn-liko" onclick="allerAuDoc('${esc(d.numero)}','${type}')">Voir</button></td>
+    </tr>`
+  ).join('');
+  zone.classList.remove('d-none');
+}
+
+function ajouterActivite(agent, numero, titre, type) {
+  let historique = JSON.parse(sessionStorage.getItem('lk_activites') || '[]');
+  historique.unshift({ agent, numero, titre, type, ts: Date.now() });
+  historique = historique.slice(0, 10);
+  sessionStorage.setItem('lk_activites', JSON.stringify(historique));
+  _afficherActivites(historique);
+}
+
+function _afficherActivites(historique) {
+  const zone = document.getElementById('activites-recentes');
+  if (!zone) return;
+  if (!historique.length) {
+    zone.innerHTML = `<div class="activity-item"><div class="activity-dot" style="background:#94a3b8"></div><div class="activity-text" style="color:#94a3b8;font-style:italic">Les activités s'afficheront après votre première action.</div></div>`;
+    return;
+  }
+  const couleurs = { versement:'#22c55e', validation:'#3b82f6', trier:'#f39c12', detruire:'#e74c3c' };
+  const actions  = { versement:'a versé', validation:'a validé', trier:'a trié', detruire:'a supprimé' };
+  const tempsRelatif = ts => {
+    const diff = Math.floor((Date.now() - ts) / 60000);
+    if (diff < 1)  return 'À l\'instant';
+    if (diff < 60) return 'Il y a ' + diff + ' min';
+    const h = Math.floor(diff / 60);
+    return h < 24 ? 'Il y a ' + h + 'h' : 'Il y a ' + Math.floor(h/24) + 'j';
+  };
+  zone.innerHTML = historique.map(a => `
+    <div class="activity-item">
+      <div class="activity-dot" style="background:${couleurs[a.type]||'#94a3b8'}"></div>
+      <div class="activity-text"><strong>${esc(a.agent)}</strong> ${actions[a.type]||'a traité'} <strong>${esc(a.numero)}</strong> — ${esc(a.titre)}</div>
+      <div class="activity-time">${tempsRelatif(a.ts)}</div>
+    </div>`).join('');
+}
+
+// Versement
+function onFileSelect(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  const tailleMo = f.size / (1024 * 1024);
+  if (tailleMo > 10) {
+    notifier('⚠️ Fichier trop volumineux (' + tailleMo.toFixed(1) + ' Mo). Limite : 10 Mo.', 'error');
+    e.target.value = ''; fichierEnAttente = null;
+    document.getElementById('file-chosen').style.display = 'none';
+    return;
+  }
+  fichierEnAttente = f;
+  document.getElementById('file-name').textContent = f.name + ' (' + tailleMo.toFixed(1) + ' Mo)';
+  document.getElementById('file-chosen').style.display = 'block';
+}
+
+function changerFichier() {
+  document.getElementById('v-file').value = '';
+  document.getElementById('file-chosen').style.display = 'none';
+  fichierEnAttente = null;
+  document.getElementById('v-file').click();
+}
+
+function ouvrirConfirmationVersement() {
+  const titre     = document.getElementById('v-titre').value.trim();
+  const service   = document.getElementById('v-service').value;
+  const categorie = document.getElementById('v-categorie').value;
+  if (!titre)            { notifier('⚠️ Le titre est obligatoire.', 'error');  return; }
+  if (!categorie)        { notifier('⚠️ Choisissez une catégorie.', 'error'); return; }
+  if (!fichierEnAttente) { notifier('⚠️ Sélectionnez un fichier.', 'error');  return; }
+  document.getElementById('resume-agent').textContent     = agentConnecte ? agentConnecte.nom : '---';
+  document.getElementById('resume-service').textContent   = service || '---';
+  document.getElementById('resume-titre').textContent     = titre;
+  document.getElementById('resume-categorie').textContent = categorie;
+  document.getElementById('resume-fichier').textContent   = fichierEnAttente.name;
+  document.getElementById('modal-confirmation-versement').classList.add('open');
+}
+
+function fermerConfirmationVersement() {
+  document.getElementById('modal-confirmation-versement').classList.remove('open');
+}
+
+function confirmerEtVerser() {
+  // Verrou anti-double-clic
+  if (_versementEnCours) { notifier('Un versement est déjà en cours...', 'info'); return; }
+  _versementEnCours = true;
+
+  document.getElementById('modal-confirmation-versement').classList.remove('open');
+  const titre     = document.getElementById('v-titre').value.trim();
+  const service   = document.getElementById('v-service').value;
+  const categorie = document.getElementById('v-categorie').value;
+  const btn   = document.getElementById('btnVerser');
+  const prog  = document.getElementById('prog-zone');
+  const bar   = document.getElementById('prog-bar');
+  const label = document.getElementById('prog-label');
+
+  btn.disabled = true; prog.style.display = 'block';
+  bar.style.width = '15%'; label.textContent = 'Lecture du fichier...';
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    bar.style.width = '40%'; label.textContent = 'Envoi en cours...';
+    const data = {
+      fileName  : fichierEnAttente.name,
+      mimeType  : fichierEnAttente.type,
+      base64    : e.target.result.split(',')[1],
+      codeAgent : agentConnecte.nom,
+      service, categorie, titre
+    };
+    bar.style.width = '100%'; label.textContent = 'Document envoyé !';
+    notifier('✅ Versement lancé — Le document sera disponible dans quelques secondes.');
+    setTimeout(() => { resetFormulaire(); btn.disabled = false; prog.style.display = 'none'; bar.style.width = '0%'; }, 600);
+
+    google.script.run
+      .withSuccessHandler(res => {
+        _versementEnCours = false;
+        if (res && res.success) {
+          notifier('✅ ' + (res.numero || 'Document') + ' versé avec succès !');
+          loadStats();
+          genererBordereauAuto(res, { titre, service, categorie });
+          ajouterActivite(agentConnecte.nom, res.numero || '—', titre, 'versement');
+        } else if (res && !res.success) {
+          notifier('⚠️ Erreur serveur : ' + (res.message || 'Inconnu'), 'error');
+        }
+      })
+      .withFailureHandler(err => {
+        _versementEnCours = false;
+        notifier('❌ Erreur : ' + err, 'error');
+      })
+      .processUpload(data);
+  };
+  reader.readAsDataURL(fichierEnAttente);
+}
+
+function resetFormulaire() {
+  document.getElementById('v-titre').value = '';
+  document.getElementById('v-categorie').value = '';
+  document.getElementById('v-file').value = '';
+  document.getElementById('file-chosen').style.display = 'none';
+  fichierEnAttente = null;
+  if (agentConnecte) {
+    document.getElementById('v-agent').value   = agentConnecte.nom;
+    document.getElementById('v-service').value = agentConnecte.service;
+  }
+}
+
+// Recherche
+function lancerRecherche() {
+  const body = document.getElementById('resultTableBody');
+  body.innerHTML = '<tr><td colspan="6" class="text-center py-3">🔍 Recherche en cours...</td></tr>';
+  const query = {
+    numero    : document.getElementById('qNum').value    || '',
+    titre     : document.getElementById('qTitre').value  || '',
+    service   : document.getElementById('qService').value|| '',
+    categorie : document.getElementById('qCat').value    || '',
+    statut    : document.getElementById('qStat').value   || ''
+  };
+  google.script.run
+    .withSuccessHandler(data => {
+      derniersResultats = data || [];
+      if (!data || !data.length) { body.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Aucun document trouvé.</td></tr>'; return; }
+      const info = data.length >= 100
+        ? '<tr><td colspan="6" class="text-center text-warning py-2 small">⚠️ Affichage limité aux <strong>100 premiers résultats</strong>. Affinez votre recherche.</td></tr>'
+        : '<tr><td colspan="6" class="text-center text-muted py-2 small"><strong>' + data.length + '</strong> document(s) trouvé(s).</td></tr>';
+      body.innerHTML = info + data.map(row => {
+        const badge  = row.statut === 'En attente' ? '<span class="badge-attente">En attente</span>' : '<span class="badge-valide">Validé</span>';
+        const btnVal = (agentConnecte && agentConnecte.role === 'Admin' && row.statut === 'En attente')
+          ? `<button onclick="confirmerValidation('${esc(row.numero)}')" class="btn btn-sm btn-success ms-1">Valider</button>` : '';
+        const btnOuvrir = row.lien ? `<a href="${esc(row.lien)}" target="_blank" class="btn btn-sm btn-outline-danger">Ouvrir</a>` : '<span class="text-muted small">—</span>';
+        return `<tr>
+          <td data-label="Numéro" class="fw-bold" style="color:var(--rouge)">${esc(row.numero)}</td>
+          <td data-label="Titre"><div class="fw-bold">${esc(row.titre||'—')}</div></td>
+          <td data-label="Agent"><div class="fw-bold">${esc(row.agent)}</div><small class="text-muted">${esc(row.service)}</small></td>
+          <td data-label="Catégorie">${esc(row.categorie)}</td>
+          <td data-label="Statut">${badge}</td>
+          <td class="td-actions">${btnOuvrir}${btnVal}</td>
+        </tr>`;
+      }).join('');
+    })
+    .withFailureHandler(err => { body.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-3">Erreur : ${esc(String(err))}</td></tr>`; })
+    .executerRecherche(query, { role: agentConnecte.role, service: agentConnecte.service });
+}
+
+function toutEffacer() {
+  ['qNum','qTitre','qDate'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['qService','qCat','qStat'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('resultTableBody').innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Lancez une recherche pour voir les documents</td></tr>';
+}
+
+// Consultation document
+function allerAuDoc(num, sourceType) {
+  docActuel = num;
+  const _fromRecherche = (derniersResultats || []).find(r => r.numero === num);
+  const _fromArchives  = (donneesArchives  || []).find(r => r.numero === num);
+  const _fromDash = dashboardData ? [
+    ...(dashboardData.docsAValider || []),
+    ...(dashboardData.docsPerimes  || []),
+    ...(dashboardData.docsAlertes  || [])
+  ].find(d => d.numero === num) : null;
+  window._docActuelInfo = _fromRecherche || _fromArchives
+    || (_fromDash ? { numero: _fromDash.numero, titre: 'Document', service: '', categorie: '' } : null);
+
+  document.getElementById('modal-consultation').style.display = 'block';
+  document.getElementById('modal-titre').textContent = 'Consultation — ' + num;
+
+  const loader  = document.getElementById('loader-document');
+  const isAdmin = agentConnecte && agentConnecte.role === 'Admin';
+
+  let docInfo = null;
+  if (dashboardData) {
+    const ea = (dashboardData.docsAValider || []).find(d => d.numero === num);
+    if (ea) docInfo = { ...ea, statut: 'En attente' };
+    if (!docInfo) { const p = (dashboardData.docsPerimes || []).find(d => d.numero === num); if (p) docInfo = { ...p, statut: 'Validé' }; }
+    if (!docInfo) { const a = (dashboardData.docsAlertes || []).find(d => d.numero === num); if (a) docInfo = { ...a, statut: 'Validé' }; }
+  }
+  if (!docInfo) docInfo = derniersResultats.find(d => d.numero === num);
+
+  if (docInfo && (docInfo.url || docInfo.lien)) {
+    const idMatch = (docInfo.url || docInfo.lien).match(/[-\w]{25,}/);
+    if (idMatch) {
+      loader.innerHTML = `<div style="text-align:center;padding:24px">
+        <i class="bi bi-file-earmark-pdf-fill" style="font-size:3rem;color:#dc3545;display:block;margin-bottom:12px"></i>
+        <div class="fw-bold mb-1">${esc(num)}</div>
+        <div class="small text-muted mb-3">Document stocké sur Google Drive</div>
+        <a href="https://drive.google.com/file/d/${esc(idMatch[0])}/preview" target="_blank" class="btn btn-liko fw-bold">
+          <i class="bi bi-eye me-2"></i>Consulter le document
+        </a></div>`;
+    }
+  } else {
+    loader.innerHTML = '<div class="text-center text-muted py-4">Lien non disponible.</div>';
+  }
+
+  const enAttente = docInfo && docInfo.statut === 'En attente';
+  const peutAgir  = isAdmin && docInfo;
+  document.getElementById('btn-valider').style.display  = (peutAgir && enAttente) ? 'inline-flex' : 'none';
+  document.getElementById('btn-trier').style.display    = peutAgir ? 'inline-flex' : 'none';
+  document.getElementById('btn-detruire').style.display = peutAgir ? 'inline-flex' : 'none';
+}
+
+function fermerConsultation() {
+  document.getElementById('modal-consultation').style.display = 'none';
+  docActuel = null;
+}
+
+function actionDoc(type) {
+  demanderConfirmation('Confirmer : ' + type + ' le document ' + docActuel + ' ?', () => {
+    const infoDoc = window._docActuelInfo
+      || (derniersResultats || []).find(r => r.numero === docActuel)
+      || (donneesArchives   || []).find(r => r.numero === docActuel)
+      || { numero: docActuel, titre: 'Document', service: '', categorie: '' };
+    google.script.run
+      .withSuccessHandler(res => {
+        notifier(res); fermerConsultation(); loadStats();
+        if (type === 'detruire') genererBordereauElim(infoDoc);
+        ajouterActivite(agentConnecte.nom, docActuel, infoDoc.titre || '—', type);
+      })
+      .traiterActionDocument(docActuel, type);
+  });
+}
+
+function confirmerValidation(num) {
+  demanderConfirmation('✅ Valider le document ' + num + ' ?', () => {
+    google.script.run.withSuccessHandler(res => { notifier(res); lancerRecherche(); loadStats(); }).validerDocument(num);
+  });
+}
+
+// Archives
+function chargerHistorique() {
+  const body = document.getElementById('archiveTableBody');
+  body.innerHTML = '<tr><td colspan="6" class="text-center py-3">Chargement...</td></tr>';
+  google.script.run.withSuccessHandler(data => {
+    donneesArchives = data || [];
+    if (!donneesArchives.length) { body.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Aucune archive validée.</td></tr>'; return; }
+    const cats     = [...new Set(donneesArchives.map(r => r.categorie).filter(Boolean))].sort();
+    const services = [...new Set(donneesArchives.map(r => r.service).filter(Boolean))].sort();
+    document.getElementById('aCat').innerHTML     = '<option value="">Toutes</option>'  + cats.map(c => `<option>${esc(c)}</option>`).join('');
+    document.getElementById('aService').innerHTML = '<option value="">Tous</option>' + services.map(s => `<option>${esc(s)}</option>`).join('');
+    afficherTableauArchives(donneesArchives);
+  }).obtenirArchivesHistorique();
+}
+
+function filtrerArchives() {
+  const sort = document.getElementById('aSort').value, cat = document.getElementById('aCat').value,
+        service = document.getElementById('aService').value, echeance = document.getElementById('aEcheance').value;
+  if (!donneesArchives.length) { notifier("Cliquez d'abord sur Actualiser.", 'info'); return; }
+  let resultats = donneesArchives.filter(row => {
+    if (sort    && row.sortFinal !== sort)    return false;
+    if (cat     && row.categorie !== cat)     return false;
+    if (service && row.service   !== service) return false;
+    if (echeance && row.echeance) {
+      const parts = row.echeance.split('/');
+      if (parts.length === 3 && new Date(parts[2], parts[1]-1, parts[0]) > new Date(echeance)) return false;
+    }
+    return true;
+  });
+  afficherTableauArchives(resultats);
+  const info = document.getElementById('info-archives');
+  info.style.display = 'block'; info.innerHTML = '<strong>' + resultats.length + '</strong> archive(s) correspondant aux filtres.';
+}
+
+function reinitFiltresArchives() {
+  ['aSort','aCat','aService'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('aEcheance').value = '';
+  if (donneesArchives.length) { afficherTableauArchives(donneesArchives); document.getElementById('info-archives').style.display = 'none'; }
+}
+
+function afficherTableauArchives(data) {
+  const body = document.getElementById('archiveTableBody');
+  if (!data.length) { body.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Aucune archive correspondante.</td></tr>'; return; }
+  body.innerHTML = data.map(row => {
+    const sort = row.sortFinal || '—';
+    let badgeClass = 'bg-secondary', instruction = '—', textClass = 'text-muted';
+    if (sort === 'D') { badgeClass = 'bg-danger';  instruction = '🔥 À détruire : ' + row.echeance; textClass = 'text-danger fw-bold'; }
+    if (sort === 'T') { badgeClass = 'bg-primary'; instruction = '🔍 À trier : '    + row.echeance; textClass = 'text-primary fw-bold'; }
+    if (['C','P','CC'].includes(sort)) { badgeClass = 'bg-success'; instruction = '🏛️ Conservation permanente'; textClass = 'text-success fw-bold'; }
+    const dua = ['C','P'].includes(row.dua) ? '<strong>Conservation permanente</strong>' : 'DUA : <strong>' + esc(String(row.dua)) + ' ans</strong>';
+    return `<tr>
+      <td data-label="Numéro" class="fw-bold" style="color:var(--texte-sec)">${esc(row.numero)}</td>
+      <td data-label="Titre"><div class="fw-bold">${esc(row.titre||'Sans Titre')}</div><small class="text-muted">Validé le : ${esc(row.dateValidation)}</small></td>
+      <td data-label="Agent"><div class="fw-bold">${esc(row.agent)}</div><small class="text-muted">${esc(row.service)}</small></td>
+      <td data-label="Catégorie"><span class="badge bg-light text-dark border">${esc(row.categorie)}</span><div class="small text-muted mt-1">${dua}</div></td>
+      <td data-label="Sort / Échéance"><span class="badge ${badgeClass} me-2">${esc(sort)}</span><span class="small ${textClass}">${instruction}</span></td>
+      <td class="td-actions"><a href="${esc(row.lien)}" target="_blank" class="btn btn-sm btn-outline-danger">Ouvrir</a></td>
+    </tr>`;
+  }).join('');
+}
+
+// Administration
+function basculerAdmin(mode) {
+  document.getElementById('section-config').style.display = mode === 'config' ? 'block' : 'none';
+  document.getElementById('section-agents').style.display = mode === 'agents' ? 'block' : 'none';
+  if (mode === 'agents') chargerListeAgents();
+}
+
+function enregistrerNouvelAgent() {
+  const nom     = document.getElementById('agentNom').value.trim();
+  const email   = document.getElementById('agentEmail').value.trim();
+  const service = document.getElementById('agentService').value;
+  const role    = document.getElementById('agentRole').value;
+  if (!nom || !email) { notifier('Nom et email obligatoires.', 'error'); return; }
+  google.script.run.withSuccessHandler(res => {
+    if (res.success) { notifier(res.message); chargerListeAgents(); document.getElementById('agentNom').value = ''; document.getElementById('agentEmail').value = ''; }
+    else notifier(res.message, 'error');
+  }).ajouterAgentComplet({ nom, email, service, role });
+}
+
+function chargerListeAgents() {
+  google.script.run.withSuccessHandler(agents => {
+    document.getElementById('tableAgents').innerHTML = agents.map(a => {
+      const bRole = a[5] === 'Admin' ? 'bg-danger' : 'bg-info text-dark';
+      const bStat = a[2] === 'Actif' ? 'bg-success' : 'bg-danger';
+      // Code masqué — affiché uniquement sur clic, valeur échappée
+      const codeEsc = esc(a[1]);
+      return `<tr>
+        <td data-label="Nom"><strong>${esc(a[0])}</strong></td>
+        <td data-label="Code"><code class="text-primary" style="cursor:pointer" onclick="notifier('Code : ${codeEsc}','info')">&bull;&bull;&bull;&bull;</code></td>
+        <td data-label="Email">${esc(a[4]||'—')}</td>
+        <td data-label="Service">${esc(a[3]||'—')}</td>
+        <td data-label="Rôle"><span class="badge ${bRole}">${esc(a[5])}</span></td>
+        <td data-label="Statut"><span class="badge ${bStat}">${esc(a[2])}</span></td>
+        <td class="td-actions">
+          <button class="btn btn-sm btn-outline-secondary me-1" onclick="modifierStatut('${codeEsc}')"><i class="bi bi-arrow-repeat"></i></button>
+          <button class="btn btn-sm btn-outline-secondary" onclick="modifierRole('${codeEsc}')"><i class="bi bi-key"></i></button>
+        </td>
+      </tr>`;
+    }).join('');
+  }).getListeAgents();
+}
+
+function filtrerAgents() {
+  const q = document.getElementById('rechercheAgent').value.toUpperCase();
+  document.querySelectorAll('#tableAgents tr').forEach(tr => { tr.style.display = tr.textContent.toUpperCase().includes(q) ? '' : 'none'; });
+}
+
+function modifierStatut(code) { if (confirm('Changer le statut ?')) google.script.run.withSuccessHandler(() => chargerListeAgents()).modifierStatut(code); }
+function modifierRole(code)   { if (confirm('Modifier les droits ?')) google.script.run.withSuccessHandler(() => chargerListeAgents()).modifierRole(code); }
+
+function ajouterElement(type) {
+  const val = document.getElementById(type === 'Service' ? 'newService' : 'newCat').value.trim();
+  if (!val) { notifier('Saisissez un nom.', 'error'); return; }
+  google.script.run.withSuccessHandler(res => { notifier(res); remplirListes(); }).ajouterElementApp(type, val);
+}
+
+function validerNouvelleCategorie() {
+  const nom  = document.getElementById('newCatNom').value.trim();
+  let dua    = document.getElementById('newCatDua').value.trim();
+  const sort = document.getElementById('newCatSort').value;
+  if (sort === 'C') dua = 'C';
+  if (!nom || !dua) { notifier('Remplissez nom et DUA.', 'error'); return; }
+  google.script.run.withSuccessHandler(res => { notifier(res); remplirListes(); }).ajouterCategorieApp(nom, dua, sort);
+}
+
+// Bordereaux
+function chargerBordereaux() {
+  const body = document.getElementById('bord-table-body');
+  if (!body) return;
+  body.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-hourglass-split me-2"></i>Chargement...</td></tr>';
+  document.getElementById('bord-count-label').textContent = 'Chargement...';
+  google.script.run
+    .withSuccessHandler(bords => {
+      tousLesBordereaux = bords || [];
+      const services = [...new Set(bords.map(b => b.service).filter(Boolean))].sort();
+      const selSvc = document.getElementById('bord-filtre-service');
+      if (selSvc) selSvc.innerHTML = '<option value="">Tous</option>' + services.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+      afficherTableauBordereaux(tousLesBordereaux.slice(0, 10), '10 derniers bordereaux');
+    })
+    .withFailureHandler(err => { body.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">Erreur : ${esc(String(err))}</td></tr>`; })
+    .getBordereaux({ nom: agentConnecte.nom, role: agentConnecte.role }, '');
+}
+
+function effacerBordereaux() {
+  tousLesBordereaux = [];
+  document.getElementById('bord-count-label').textContent = 'Cliquez sur Actualiser pour charger les bordereaux';
+  viderTableau('bord-table-body', 7, 'Cliquez sur Actualiser pour afficher les bordereaux');
+  ['bord-filtre-type','bord-filtre-service','bord-filtre-date'].forEach(id => { document.getElementById(id).value = ''; });
+}
+
+function filtrerBordereaux() {
+  const type    = document.getElementById('bord-filtre-type').value;
+  const service = document.getElementById('bord-filtre-service').value;
+  const date    = document.getElementById('bord-filtre-date').value;
+  if (!tousLesBordereaux.length) { notifier("Cliquez d'abord sur Actualiser.", 'info'); return; }
+  let resultats = tousLesBordereaux.filter(b => {
+    if (type    && b.type    !== type)    return false;
+    if (service && b.service !== service) return false;
+    if (date && b.date) {
+      const parts = b.date.split('/');
+      if (parts.length >= 3) {
+        const annee = parts[2].split(' ')[0];
+        if (new Date(annee + '-' + parts[1] + '-' + parts[0]) < new Date(date)) return false;
+      }
+    }
+    return true;
+  });
+  afficherTableauBordereaux(resultats, resultats.length + ' bordereau(x) trouvé(s)');
+}
+
+function reinitBordereaux() {
+  ['bord-filtre-type','bord-filtre-service','bord-filtre-date'].forEach(id => document.getElementById(id).value = '');
+  afficherTableauBordereaux(tousLesBordereaux.slice(0, 10), '10 derniers bordereaux');
+}
+
+function afficherTableauBordereaux(bords, label) {
+  const body = document.getElementById('bord-table-body');
+  document.getElementById('bord-count-label').textContent = label;
+  if (!bords.length) { body.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Aucun bordereau trouvé.</td></tr>'; return; }
+  body.innerHTML = bords.map(b => {
+    const typeBadge = b.type === 'elimination'
+      ? '<span class="badge" style="background:#e74c3c;color:white">Élimination</span>'
+      : '<span class="badge" style="background:var(--nuit-moyen);color:white">Versement</span>';
+    const idx = tousLesBordereaux.indexOf(b);
+    return `<tr>
+      <td><code style="font-size:.75rem;color:var(--rouge)">${esc(b.numBordereau||'--')}</code></td>
+      <td>${typeBadge}</td>
+      <td class="fw-bold" style="font-size:.83rem">${esc(b.agent||'--')}</td>
+      <td style="font-size:.83rem">${esc(b.service||'--')}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.83rem">${esc(b.titre||'--')}</td>
+      <td style="white-space:nowrap;font-size:.78rem;color:var(--texte-sec)">${esc(b.date||'--')}</td>
+      <td class="text-end"><button onclick="reimprimerBordereauAdmin(${idx})" class="btn btn-sm btn-outline-secondary py-0 px-2"><i class="bi bi-printer"></i></button></td>
+    </tr>`;
+  }).join('');
+}
+
+// Historique versements agent
+function basculerHistoriqueVersements() {
+  const zone = document.getElementById('historique-versements');
+  const btn  = document.getElementById('btn-toggle-historique');
+  const visible = zone.style.display !== 'none';
+  zone.style.display = visible ? 'none' : 'block';
+  btn.innerHTML = visible
+    ? '<i class="bi bi-clock-history me-2"></i>Voir l\'historique de mes versements'
+    : '<i class="bi bi-chevron-up me-2"></i>Masquer l\'historique';
+  if (!visible) chargerHistoriqueAgent();
+}
+
+function chargerHistoriqueAgent() {
+  const body = document.getElementById('historique-agent-body');
+  body.innerHTML = '<div class="text-center text-muted py-3"><i class="bi bi-hourglass-split me-2"></i>Chargement...</div>';
+  if (!agentConnecte) return;
+  google.script.run
+    .withSuccessHandler(bords => {
+      if (!bords || !bords.length) { body.innerHTML = '<div class="text-center text-muted py-4 small">Aucun bordereau enregistré.</div>'; return; }
+      window._registreBordereaux = bords;
+      body.innerHTML = `<div class="table-responsive">
+        <table class="table table-sm table-hover mb-0" style="font-size:.8rem">
+          <thead><tr><th>N° Bordereau</th><th>Titre</th><th>N° LIKOAM</th><th>Date</th><th></th></tr></thead>
+          <tbody>${bords.map((b, i) => `<tr>
+            <td><code style="font-size:.72rem;color:var(--rouge)">${esc(b.numBordereau||'--')}</code></td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(b.titre||'--')}</td>
+            <td><code style="font-size:.72rem">${esc(b.numLikoam||'--')}</code></td>
+            <td style="white-space:nowrap;font-size:.75rem">${esc(b.date||'--')}</td>
+            <td><button onclick="reimprimerBordereau(${i})" class="btn btn-outline-secondary btn-sm py-0 px-2"><i class="bi bi-printer"></i></button></td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+        <div class="text-center text-muted py-2" style="font-size:.75rem">${bords.length} bordereau(x)</div>`;
+    })
+    .withFailureHandler(err => { body.innerHTML = `<div class="text-danger py-2 small text-center">Erreur : ${esc(String(err))}</div>`; })
+    .getBordereaux({ nom: agentConnecte.nom, role: agentConnecte.role }, 'versement');
+}
+
+// Génération bordereaux
+function genererBordereauAuto(res, formData) {
+  const now      = new Date();
+  const dateStr  = now.toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
+  const heureStr = now.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+  const num      = res.numero || 'DOC-????';
+  const numBV    = 'BV-' + now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '-' + String(Math.floor(Math.random()*999)+1).padStart(3,'0');
+  const agent    = agentConnecte ? agentConnecte.nom : '—';
+  const service  = formData.service || (agentConnecte ? agentConnecte.service : '—');
+
+  dernierBordereau = { numBV, num, agent, service, titre: formData.titre||'—', cat: formData.categorie||'—', dateStr, heureStr, lien: res.lienDrive||'' };
+  const html = construireBordereauHTML(dernierBordereau);
+  document.getElementById('apercu-bordereau-versement').innerHTML = html;
+  document.getElementById('zone-bordereau-versement').style.display = 'block';
+  setTimeout(() => document.getElementById('zone-bordereau-versement').scrollIntoView({ behavior:'smooth', block:'start' }), 200);
+
+  google.script.run.withSuccessHandler(()=>{}).withFailureHandler(()=>{})
+    .enregistrerBordereau({ numBordereau:numBV, type:'versement', agent, service, numLikoam:num, titre:formData.titre||'', categorie:formData.categorie||'', motif:'', html });
+}
+
+function construireBordereauHTML(d) {
+  return `<div id="contenu-bv-print" style="font-family:Times New Roman,serif;color:#000;padding:20px">
+  <div style="border:2px solid #000">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:12px 16px;border-bottom:1px solid #000">
+      <div style="font-size:9pt;line-height:1.6">
+        <div style="font-size:8pt;text-transform:uppercase;letter-spacing:1px;color:#555">SYSTÈME DE GESTION DES ARCHIVES</div>
+        <strong style="font-size:11pt">${esc(d.service||'Service versant')}</strong>
+      </div>
+      <div style="text-align:right;font-size:9pt">
+        <div style="color:#555">Référence bordereau :</div>
+        <div style="font-size:14pt;font-weight:bold;font-family:monospace;letter-spacing:2px">${esc(d.numBV)}</div>
+        <div style="font-size:8pt;color:#555">Date : ${esc(d.dateStr)} à ${esc(d.heureStr)}</div>
+      </div>
+    </div>
+    <div style="text-align:center;padding:10px;border-bottom:1px solid #000">
+      <div style="font-size:15pt;font-weight:bold;text-transform:uppercase;letter-spacing:3px">Bordereau de Versement</div>
+      <div style="font-size:8pt;color:#555;margin-top:3px">Document officiel — Archivez ce bordereau avec votre dossier</div>
+    </div>
+  </div>
+  <div style="border:1px solid #000;border-top:none">
+    <div style="background:#1e293b;color:white;padding:5px 12px;font-size:9pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px">1. Identification du versant</div>
+    <div style="padding:10px 14px">
+      <div style="display:flex;margin-bottom:5px;font-size:10pt"><span style="min-width:180px;font-weight:bold">Agent versant :</span><span style="border-bottom:1px solid #555;flex:1">${esc(d.agent)}</span></div>
+      <div style="display:flex;margin-bottom:5px;font-size:10pt"><span style="min-width:180px;font-weight:bold">Service émetteur :</span><span style="border-bottom:1px solid #555;flex:1">${esc(d.service)}</span></div>
+      <div style="display:flex;font-size:10pt"><span style="min-width:180px;font-weight:bold">Date du versement :</span><span style="border-bottom:1px solid #555;flex:1">${esc(d.dateStr)}</span></div>
+    </div>
+  </div>
+  <div style="border:1px solid #000;border-top:none">
+    <div style="background:#1e293b;color:white;padding:5px 12px;font-size:9pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px">2. Description du document versé</div>
+    <div style="padding:10px 14px">
+      <div style="display:flex;margin-bottom:5px;font-size:10pt"><span style="min-width:180px;font-weight:bold">Numéro LIKOAM :</span><span style="border-bottom:1px solid #555;flex:1;font-family:monospace;font-weight:bold">${esc(d.num)}</span></div>
+      <div style="display:flex;margin-bottom:5px;font-size:10pt"><span style="min-width:180px;font-weight:bold">Titre / Objet :</span><span style="border-bottom:1px solid #555;flex:1">${esc(d.titre)}</span></div>
+      <div style="display:flex;margin-bottom:5px;font-size:10pt"><span style="min-width:180px;font-weight:bold">Catégorie :</span><span style="border-bottom:1px solid #555;flex:1">${esc(d.cat)}</span></div>
+      <div style="display:flex;font-size:10pt"><span style="min-width:180px;font-weight:bold">Lien numérique :</span><span style="border-bottom:1px solid #555;flex:1;font-size:8pt;color:#1d4ed8;word-break:break-all">${esc(d.lien||'En cours de traitement…')}</span></div>
+    </div>
+  </div>
+  <div style="border:1px solid #000;border-top:none;border-left:4px solid #f39c12">
+    <div style="background:#d68910;color:white;padding:5px 12px;font-size:9pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px">3. Cadre réservé à l'archiviste</div>
+    <div style="padding:10px 14px">
+      <div style="display:flex;margin-bottom:10px;font-size:10pt"><span style="min-width:180px;font-weight:bold">Localisation physique :</span><span style="border-bottom:1px solid #555;flex:1;min-height:18px">&nbsp;</span></div>
+      <div style="display:flex;margin-bottom:10px;font-size:10pt"><span style="min-width:180px;font-weight:bold">DUA :</span><span style="border-bottom:1px solid #555;flex:1;min-height:18px">&nbsp;</span><span style="min-width:100px;font-weight:bold;margin-left:20px">Sort final :</span><span style="border-bottom:1px solid #555;flex:1;min-height:18px">&nbsp;</span></div>
+      <div style="display:flex;font-size:10pt"><span style="min-width:180px;font-weight:bold">Observations :</span><span style="border-bottom:1px solid #555;flex:1;min-height:18px">&nbsp;</span></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:16px;margin-top:16px">
+    <div style="flex:1;border:1px solid #000;padding:10px;text-align:center;min-height:80px"><div style="font-weight:bold;font-size:9pt;border-bottom:1px solid #000;padding-bottom:5px;margin-bottom:30px">Agent versant</div><div style="font-size:8pt;color:#555">${esc(d.agent)}</div></div>
+    <div style="flex:1;border:1px solid #000;padding:10px;text-align:center;min-height:80px"><div style="font-weight:bold;font-size:9pt;border-bottom:1px solid #000;padding-bottom:5px;margin-bottom:30px">Archiviste responsable</div><div style="font-size:8pt;color:#aaa;font-style:italic">Signature et cachet</div></div>
+  </div>
+  <div style="text-align:center;font-size:8pt;color:#777;margin-top:12px;border-top:1px solid #ccc;padding-top:8px">Généré par LIKOAM · ${esc(d.dateStr)}</div>
+</div>`;
+}
+
+function genererBordereauElim(doc) {
+  const now      = new Date();
+  const dateStr  = now.toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
+  const heureStr = now.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+  const numBE    = 'BE-' + now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '-' + String(Math.floor(Math.random()*999)+1).padStart(3,'0');
+  const agent    = agentConnecte ? agentConnecte.nom : 'Archiviste';
+
+  const html = `<div style="font-family:Times New Roman,serif;color:#000;padding:20px">
+  <div style="border:2px solid #c0392b">
+    <div style="display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #c0392b">
+      <div><div style="font-size:8pt;color:#c0392b;text-transform:uppercase">LIKOAM — Bordereau officiel</div><strong>${esc(doc.service||'Service émetteur')}</strong></div>
+      <div style="text-align:right;font-size:9pt"><div>Référence :</div><div style="font-size:14pt;font-weight:bold;font-family:monospace;color:#c0392b">${esc(numBE)}</div><div style="font-size:8pt;color:#555">${esc(dateStr)} à ${esc(heureStr)}</div></div>
+    </div>
+    <div style="text-align:center;padding:10px;border-bottom:1px solid #c0392b"><div style="font-size:15pt;font-weight:bold;text-transform:uppercase;letter-spacing:2px">Bordereau d'Elimination</div><div style="font-size:8pt;color:#c0392b;font-weight:bold">Document irréversible</div></div>
+  </div>
+  <div style="border:1px solid #000;border-top:none">
+    <div style="background:#1e293b;color:white;padding:5px 12px;font-size:9pt;font-weight:bold;text-transform:uppercase">1. Document éliminé</div>
+    <div style="padding:10px 14px">
+      <div style="display:flex;margin-bottom:5px;font-size:10pt"><span style="min-width:180px;font-weight:bold">Numéro LIKOAM :</span><span style="border-bottom:1px solid #555;flex:1;font-family:monospace;font-weight:bold">${esc(doc.numero||'—')}</span></div>
+      <div style="display:flex;margin-bottom:5px;font-size:10pt"><span style="min-width:180px;font-weight:bold">Titre :</span><span style="border-bottom:1px solid #555;flex:1">${esc(doc.titre||'—')}</span></div>
+      <div style="display:flex;font-size:10pt"><span style="min-width:180px;font-weight:bold">Service :</span><span style="border-bottom:1px solid #555;flex:1">${esc(doc.service||'—')}</span></div>
+    </div>
+  </div>
+  <div style="border:1px solid #000;border-top:none;border-left:4px solid #c0392b">
+    <div style="background:#c0392b;color:white;padding:5px 12px;font-size:9pt;font-weight:bold;text-transform:uppercase">2. Décision d'élimination</div>
+    <div style="padding:10px 14px">
+      <div style="display:flex;margin-bottom:5px;font-size:10pt"><span style="min-width:180px;font-weight:bold">Date :</span><span style="border-bottom:1px solid #555;flex:1">${esc(dateStr)}</span></div>
+      <div style="display:flex;font-size:10pt"><span style="min-width:180px;font-weight:bold">Responsable :</span><span style="border-bottom:1px solid #555;flex:1">${esc(agent)}</span></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:16px;margin-top:16px">
+    <div style="flex:1;border:1px solid #000;padding:10px;text-align:center;min-height:80px"><div style="font-weight:bold;font-size:9pt;border-bottom:1px solid #000;padding-bottom:5px;margin-bottom:30px">Archiviste responsable</div><div style="font-size:8pt;color:#555">${esc(agent)}</div></div>
+    <div style="flex:1;border:1px solid #000;padding:10px;text-align:center;min-height:80px"><div style="font-weight:bold;font-size:9pt;border-bottom:1px solid #000;padding-bottom:5px;margin-bottom:30px">Autorité de tutelle</div><div style="font-size:8pt;color:#aaa;font-style:italic">Signature et cachet</div></div>
+  </div>
+  <div style="text-align:center;font-size:8pt;color:#c0392b;margin-top:12px;border-top:1px solid #ccc;padding-top:8px;font-weight:bold">Généré par LIKOAM · ${esc(dateStr)}</div>
+</div>`;
+
+  _ouvrirImpression(html, numBE);
+  google.script.run.withSuccessHandler(()=>{}).withFailureHandler(()=>{})
+    .enregistrerBordereau({ numBordereau:numBE, type:'elimination', agent, service:doc.service||'', numLikoam:doc.numero||'', titre:doc.titre||'', categorie:doc.categorie||'', motif:'Expiration DUA', html });
+  notifier('📄 Bordereau d\'élimination ' + numBE + ' généré.');
+}
+
+function telechargerBordereauVersement() {
+  if (!dernierBordereau) return;
+  const contenu = document.getElementById('contenu-bv-print');
+  if (!contenu) return;
+  _ouvrirImpression(contenu.innerHTML, dernierBordereau.numBV);
+}
+
+function reimprimerBordereau(index) {
+  const bords = window._registreBordereaux;
+  if (!bords || !bords[index]) return;
+  const b = bords[index];
+  const d = { numBV:b.numBordereau||'—', num:b.numLikoam||'—', agent:b.agent||'—', service:b.service||'—', titre:b.titre||'—', cat:b.categorie||'—', dateStr:b.date||'—', heureStr:'', lien:'' };
+  _ouvrirImpression(construireBordereauHTML(d), d.numBV);
+}
+
+function reimprimerBordereauAdmin(index) {
+  const b = tousLesBordereaux[index];
+  if (!b) { notifier('Bordereau introuvable.', 'error'); return; }
+  const d = { numBV:b.numBordereau||'—', num:b.numLikoam||'—', agent:b.agent||'—', service:b.service||'—', titre:b.titre||'—', cat:b.categorie||'—', dateStr:b.date||'—', heureStr:'', lien:'' };
+  _ouvrirImpression(construireBordereauHTML(d), d.numBV);
+}
+
+function _ouvrirImpression(html, titre) {
+  const w = window.open('', '_blank', 'width=900,height=700');
+  w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>${esc(titre)}</title>
+    <style>body{margin:15mm;font-family:"Times New Roman",serif;color:#000}@media print{@page{margin:15mm;size:A4}body{margin:0}}</style>
+    </head><body>${html}<scr` + `ipt>window.onload=function(){window.print();};</scr` + `ipt></body></html>`);
+  w.document.close();
+}
+
+// Utilitaires
+function showPage(pageId, navEl) {
+  document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  const p = document.getElementById(pageId); if (p) p.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  document.querySelector('.sidebar').classList.remove('open');
+}
+
+function demanderConfirmation(message, callback) {
+  document.getElementById('confirmMessage').textContent = message;
+  document.getElementById('confirmOverlay').classList.add('open');
+  document.getElementById('confirmYes').onclick = () => {
+    document.getElementById('confirmOverlay').classList.remove('open');
+    callback();
+  };
+}
+
+// Vider un tableau générique
+function viderTableau(tbodyId, colspan, message) {
+  const el = document.getElementById(tbodyId);
+  if (el) el.innerHTML = `<tr><td colspan="${colspan}" class="text-center text-muted py-4">${message}</td></tr>`;
+}
+
+function notifier(message, type = 'success') {
+  const t = document.getElementById('liveToast');
+  t.style.background = type === 'error' ? '#dc3545' : type === 'info' ? '#0ea5e9' : '#198754';
+  t.textContent = message;
+  t.style.display = 'block';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.display = 'none'; }, 4500);
+}
+
+function _afficherActivitesServeur(activites) {
+  const zone = document.getElementById('activites-recentes');
+  if (!zone || !activites.length) return;
+  const tempsRelatif = ts => {
+    if (!ts) return '—';
+    const diff = Math.floor((Date.now() - ts) / 60000);
+    if (diff < 1)  return 'À l\'instant';
+    if (diff < 60) return 'Il y a ' + diff + ' min';
+    const h = Math.floor(diff / 60);
+    return h < 24 ? 'Il y a ' + h + 'h' : 'Il y a ' + Math.floor(h/24) + 'j';
+  };
+  const couleurStatut = statut => {
+    if (!statut) return '#94a3b8';
+    const s = statut.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    if (s === 'valide')     return '#3b82f6';
+    if (s === 'en attente') return '#f39c12';
+    return '#22c55e';
+  };
+  const labelStatut = statut => {
+    if (!statut) return 'versé';
+    const s = statut.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    if (s === 'valide')     return 'a validé';
+    if (s === 'en attente') return 'a versé';
+    return 'a traité';
+  };
+  zone.innerHTML = activites.map(a => `
+    <div class="activity-item">
+      <div class="activity-dot" style="background:${couleurStatut(a.statut)}"></div>
+      <div class="activity-text"><strong>${esc(a.agent)}</strong> ${labelStatut(a.statut)} <strong>${esc(a.numero)}</strong> — ${esc(a.titre)} <small class="text-muted ms-1">(${esc(a.service)})</small></div>
+      <div class="activity-time">${tempsRelatif(a.ts)}</div>
+    </div>`).join('');
+}
+</script>
+</body>
+</html>
