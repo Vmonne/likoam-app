@@ -98,7 +98,13 @@ const CONFIG = {
 
 **4. Préparer le Google Sheets**
 
-Le projet nécessite un Google Sheets avec les feuilles suivantes : `Documents`, `Agents`, `SERVICES`, `Référence DUA`, `BORDEREAUX`. La structure des colonnes est documentée dans le code source.
+**4. Préparer le Google Sheets**
+
+Un modèle Google Sheets prêt à l'emploi est disponible :
+
+📊 **[Accéder au modèle LIKOAM](https://docs.google.com/spreadsheets/d/1Pm0DNfa6StI4gH1YAb9OeHLSB06CknNj9q1sQDfFnmQ/edit?usp=sharing)**
+
+Cliquez sur **Fichier → Faire une copie** pour obtenir votre propre version, puis copiez l'ID depuis l'URL dans `Code.gs`.
 
 **5. Déployer**
 - Cliquer **Déployer → Nouveau déploiement**
