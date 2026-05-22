@@ -158,7 +158,7 @@ likoam/
 
 ### 👩🏽‍💻 Auteure
 
-**Victorine Monné Loua** — Archiviste & Développeuse
+**Victorine Monné Loua** — Archiviste digital
 
 🌐 [victorinemonne.com](https://victorinemonne.com)
 🖥️ [likoam.com](https://likoam.com)
@@ -323,7 +323,7 @@ likoam/
 
 ### 👩🏽‍💻 Author
 
-**Victorine Monné Loua** — Archivist & Developer
+**Victorine Monné Loua** — Digital Archivist
 
 🌐 [victorinemonne.com](https://victorinemonne.com)
 🖥️ [likoam.com](https://likoam.com)
