@@ -2,7 +2,7 @@
 // LIKOAM — Système de Gestion des Archives
 // Auteure : Victorine Monné — victorinemonne.com
 // Licence : AGPL v3
-// Version : 1.0 (version publique — fonctionnalités de base)
+// Version : // Version : 0.1-beta (version publique — fonctionnalités de base) (version publique — fonctionnalités de base)
 // Note : Le calcul automatique des DUA et le moteur de tri
 //        sont disponibles dans la version complète (v2)
 // ============================================================
